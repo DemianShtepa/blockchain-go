@@ -1,8 +1,10 @@
 package internal
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"io"
 )
 
 const HashLength = 32
@@ -21,15 +23,25 @@ func (h *Hash) IsEmpty() bool {
 
 func (h *Hash) toSlice() []byte {
 	slice := make([]byte, HashLength)
-	for i, u := range h {
-		slice[i] = u
-	}
+
+	copy(slice, h[:HashLength])
 
 	return slice
 }
 
 func (h *Hash) String() string {
 	return hex.EncodeToString(h.toSlice())
+}
+
+func HashFromReader(reader io.Reader) (Hash, error) {
+	var buf bytes.Buffer
+
+	_, err := buf.ReadFrom(reader)
+	if err != nil {
+		return Hash{}, err
+	}
+
+	return HashFromBytes(buf.Bytes())
 }
 
 func HashFromBytes(b []byte) (Hash, error) {

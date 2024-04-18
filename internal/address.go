@@ -5,16 +5,14 @@ import (
 	"fmt"
 )
 
-const addressLength = 20
+const AddressLength = 20
 
-type Address [addressLength]byte
+type Address [AddressLength]byte
 
 func (a *Address) toSlice() []byte {
-	slice := make([]byte, addressLength)
+	slice := make([]byte, AddressLength)
 
-	for i, b := range a {
-		slice[i] = b
-	}
+	copy(slice, a[:AddressLength])
 
 	return slice
 }
@@ -24,14 +22,13 @@ func (a *Address) String() string {
 }
 
 func AddressFromBytes(b []byte) (Address, error) {
-	if len(b) != addressLength {
-		return Address{}, fmt.Errorf("expected bytes length to be %d, got %d", addressLength, len(b))
+	if len(b) != AddressLength {
+		return Address{}, fmt.Errorf("expected bytes length to be %d, got %d", AddressLength, len(b))
 	}
 
 	var address Address
-	for i := range address {
-		address[i] = b[i]
-	}
+
+	copy(address[:], b[:AddressLength])
 
 	return address, nil
 }

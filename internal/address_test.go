@@ -1,6 +1,7 @@
-package internal
+package internal_test
 
 import (
+	"github.com/DemianShtepa/blockchain-go/internal"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -20,7 +21,7 @@ func TestAddressFromBytes(t *testing.T) {
 		},
 		{
 			title:       "correct address length",
-			bytesLength: addressLength,
+			bytesLength: internal.AddressLength,
 			assertion: func(t *testing.T, err error) {
 				assert.Nil(t, err)
 			},
@@ -30,7 +31,7 @@ func TestAddressFromBytes(t *testing.T) {
 		t.Run(c.title, func(t *testing.T) {
 			b := make([]byte, c.bytesLength)
 
-			_, err := AddressFromBytes(b)
+			_, err := internal.AddressFromBytes(b)
 
 			c.assertion(t, err)
 		})

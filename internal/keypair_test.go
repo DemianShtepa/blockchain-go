@@ -1,12 +1,13 @@
-package internal
+package internal_test
 
 import (
+	"github.com/DemianShtepa/blockchain-go/internal"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestSignature_Verify_Success(t *testing.T) {
-	privateKey, _ := NewPrivateKey()
+	privateKey, _ := internal.NewPrivateKey()
 	data := []byte("Test")
 
 	signature, err := privateKey.Sign(data)
@@ -16,8 +17,8 @@ func TestSignature_Verify_Success(t *testing.T) {
 }
 
 func TestSignature_Verify_FailWithDifferentPublicKey(t *testing.T) {
-	privateKey, _ := NewPrivateKey()
-	differentPrivateKey, _ := NewPrivateKey()
+	privateKey, _ := internal.NewPrivateKey()
+	differentPrivateKey, _ := internal.NewPrivateKey()
 	data := []byte("Test")
 
 	signature, err := privateKey.Sign(data)
@@ -27,7 +28,7 @@ func TestSignature_Verify_FailWithDifferentPublicKey(t *testing.T) {
 }
 
 func TestSignature_Verify_FailWithDifferentData(t *testing.T) {
-	privateKey, _ := NewPrivateKey()
+	privateKey, _ := internal.NewPrivateKey()
 	data := []byte("Test")
 
 	signature, err := privateKey.Sign(data)
