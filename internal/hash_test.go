@@ -1,47 +1,22 @@
 package internal
 
 import (
+	"crypto/rand"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestHash_IsEmpty(t *testing.T) {
-	cases := []struct {
-		title   string
-		hash    Hash
-		isEmpty bool
-	}{
-		{
-			title:   "empty hash",
-			hash:    Hash{},
-			isEmpty: true,
-		},
-		{
-			title:   "not empty hash",
-			hash:    Hash{1},
-			isEmpty: false,
-		},
-	}
+func randomBytes(t *testing.T) []byte {
+	b := make([]byte, 32)
 
-	for _, c := range cases {
-		t.Run(c.title, func(t *testing.T) {
-			assert.Equal(t, c.isEmpty, c.hash.IsEmpty())
-		})
-	}
-}
+	_, err := rand.Read(b)
+	assert.Nil(t, err)
 
-func TestHashFromBytes_ReturnsError(t *testing.T) {
-	b := make([]byte, 1)
-
-	hash, err := HashFromBytes(b)
-	assert.True(t, hash.IsEmpty())
-	assert.NotNil(t, err)
+	return b
 }
 
 func TestHashFromBytes(t *testing.T) {
-	b := make([]byte, hashLength)
-
-	hash, err := HashFromBytes(b)
-	assert.True(t, hash.IsEmpty())
+	hash, err := HashFromBytes(randomBytes(t))
+	assert.False(t, hash.IsEmpty())
 	assert.Nil(t, err)
 }

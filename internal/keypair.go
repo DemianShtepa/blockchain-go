@@ -1,11 +1,10 @@
-package crypto
+package internal
 
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
-	"github.com/DemianShtepa/blockchain-go/internal"
 )
 
 type PrivateKey struct {
@@ -48,11 +47,11 @@ func (pk PublicKey) toBytes() []byte {
 	return elliptic.MarshalCompressed(pk.key, pk.key.X, pk.key.Y)
 }
 
-func (pk PublicKey) Address() (internal.Address, error) {
+func (pk PublicKey) Address() (Address, error) {
 	hash := sha256.New()
 	hash.Write(pk.toBytes())
 
-	return internal.AddressFromBytes(hash.Sum(nil)[:20])
+	return AddressFromBytes(hash.Sum(nil)[:20])
 }
 
 type Signature struct {

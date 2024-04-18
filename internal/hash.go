@@ -1,13 +1,13 @@
 package internal
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 )
 
-const hashLength = 32
+const HashLength = 32
 
-type Hash [hashLength]byte
+type Hash [HashLength]byte
 
 func (h *Hash) IsEmpty() bool {
 	for _, u := range h {
@@ -20,7 +20,7 @@ func (h *Hash) IsEmpty() bool {
 }
 
 func (h *Hash) toSlice() []byte {
-	slice := make([]byte, hashLength)
+	slice := make([]byte, HashLength)
 	for i, u := range h {
 		slice[i] = u
 	}
@@ -33,13 +33,13 @@ func (h *Hash) String() string {
 }
 
 func HashFromBytes(b []byte) (Hash, error) {
-	if len(b) != hashLength {
-		return Hash{}, fmt.Errorf("expected bytes length to be %d, got %d", hashLength, len(b))
-	}
+	shaHash := sha256.New()
+	shaHash.Write(b)
+	shaHashBytes := shaHash.Sum(nil)
 
 	var hash Hash
-	for i, bt := range b {
-		hash[i] = bt
+	for i := range hash {
+		hash[i] = shaHashBytes[i]
 	}
 
 	return hash, nil
