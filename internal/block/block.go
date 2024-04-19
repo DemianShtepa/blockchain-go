@@ -2,6 +2,7 @@ package block
 
 import (
 	"bytes"
+	"errors"
 	"github.com/DemianShtepa/blockchain-go/internal"
 	"io"
 )
@@ -32,6 +33,10 @@ func NewBlock(head *Header, transactions []Transaction) *Block {
 }
 
 func (b *Block) Sign(privateKey internal.PrivateKey) error {
+	if b.headerHash.IsEmpty() {
+		return errors.New("can't sign block if header hash is empty")
+	}
+
 	signature, err := privateKey.Sign(b.headerHash[:])
 	if err != nil {
 		return err

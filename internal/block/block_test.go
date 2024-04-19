@@ -26,8 +26,18 @@ func randomHeader(t *testing.T, height uint64) *block.Header {
 	return block.NewHeader(1, hash, time.Now().UnixNano(), height)
 }
 
-func randomBlock(t *testing.T) *block.Block {
-	return block.NewBlock(randomHeader(t, 10), nil)
+func randomBlock(t *testing.T, headerHeight uint64) *block.Block {
+	return block.NewBlock(randomHeader(t, headerHeight), nil)
+}
+
+func randomBlockWithSignature(t *testing.T, headerHeight uint64, privateKey internal.PrivateKey) *block.Block {
+	b := block.NewBlock(randomHeader(t, headerHeight), nil)
+	_, err := b.Hash(&binary.BlockEncoder{})
+
+	assert.Nil(t, err)
+	assert.Nil(t, b.Sign(privateKey))
+
+	return b
 }
 
 func randomPrivateKey(t *testing.T) internal.PrivateKey {
@@ -38,18 +48,28 @@ func randomPrivateKey(t *testing.T) internal.PrivateKey {
 }
 
 func TestBlock_Hash(t *testing.T) {
-	b := randomBlock(t)
+	b := randomBlock(t, uint64(10))
 	encoder := binary.BlockEncoder{}
 
 	hash, err := b.Hash(&encoder)
+
 	assert.Nil(t, err)
 	assert.False(t, hash.IsEmpty())
 }
 
-func TestBlock_SignVerify(t *testing.T) {
-	b := randomBlock(t)
+func TestBlock_Sign_FailWithNoHash(t *testing.T) {
+	b := randomBlock(t, uint64(10))
 	privateKey := randomPrivateKey(t)
 
+	assert.NotNil(t, b.Sign(privateKey))
+}
+
+func TestBlock_SignVerify(t *testing.T) {
+	b := randomBlock(t, uint64(10))
+	privateKey := randomPrivateKey(t)
+	_, err := b.Hash(&binary.BlockEncoder{})
+
+	assert.Nil(t, err)
 	assert.Nil(t, b.Sign(privateKey))
 	assert.True(t, b.Verify())
 }
