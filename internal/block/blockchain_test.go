@@ -6,6 +6,7 @@ import (
 	"github.com/DemianShtepa/blockchain-go/internal/encode/binary"
 	"github.com/DemianShtepa/blockchain-go/internal/storage/memory"
 	"github.com/stretchr/testify/assert"
+	"sync"
 	"testing"
 	"time"
 )
@@ -163,4 +164,48 @@ func TestBlockchain_HasBlock(t *testing.T) {
 			assert.Equal(t, c.hasBlock, blockchain.HasBlock(c.height))
 		})
 	}
+}
+
+func TestBlockchain_ConcurrentAccess(t *testing.T) {
+	privateKey := randomPrivateKey(t)
+	headerEncoder := binary.HeaderEncoder{}
+	genesisBlockHeader := block.NewHeader(1, internal.Hash{}, time.Now().UnixNano(), uint64(0), &headerEncoder)
+	genesisBlock := block.NewBlock(genesisBlockHeader, nil)
+	_, err := genesisBlock.Hash()
+	assert.Nil(t, err)
+	assert.Nil(t, genesisBlock.Sign(privateKey))
+	blockchain, err := block.NewBlockchain(memory.NewStorage(), genesisBlock)
+	assert.Nil(t, err)
+
+	var wg sync.WaitGroup
+	wg.Add(3)
+
+	go func() {
+		defer wg.Done()
+
+		genesisBlockHash, err := genesisBlock.Hash()
+		assert.Nil(t, err)
+		header := block.NewHeader(1, genesisBlockHash, time.Now().UnixNano(), uint64(1), &headerEncoder)
+		newBlock := block.NewBlock(header, nil)
+		_, err = newBlock.Hash()
+		assert.Nil(t, err)
+		assert.Nil(t, newBlock.Sign(privateKey))
+		assert.Nil(t, blockchain.AddBlock(newBlock))
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		assert.NotNil(t, blockchain.Height())
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		assert.NotNil(t, blockchain.LastHeader())
+	}()
+
+	wg.Wait()
+
+	assert.Equal(t, uint64(1), blockchain.Height())
 }

@@ -1,6 +1,9 @@
 test:
 	go test ./...
 
+test-race:
+	go test -race ./...
+
 test-verbose:
 	go test -v ./...
 
