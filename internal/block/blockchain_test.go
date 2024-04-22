@@ -3,38 +3,115 @@ package block_test
 import (
 	"github.com/DemianShtepa/blockchain-go/internal"
 	"github.com/DemianShtepa/blockchain-go/internal/block"
+	"github.com/DemianShtepa/blockchain-go/internal/encode/binary"
 	"github.com/DemianShtepa/blockchain-go/internal/storage/memory"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
-
-func newBlockchain(t *testing.T, headerHeight uint64, privateKey internal.PrivateKey) *block.Blockchain {
-	blockchain, err := block.NewBlockchain(memory.NewStorage(), randomBlockWithSignature(t, headerHeight, privateKey))
-	assert.Nil(t, err)
-
-	return blockchain
-}
 
 func TestBlockchain_AddBlock(t *testing.T) {
 	privateKey := randomPrivateKey(t)
-	blockchain := newBlockchain(t, 0, privateKey)
+	headerEncoder := binary.HeaderEncoder{}
+	genesisBlockHeader := block.NewHeader(1, internal.Hash{}, time.Now().UnixNano(), uint64(0), &headerEncoder)
+	genesisBlock := block.NewBlock(genesisBlockHeader, nil)
+	_, err := genesisBlock.Hash()
+	assert.Nil(t, err)
+	assert.Nil(t, genesisBlock.Sign(privateKey))
+	blockchain, err := block.NewBlockchain(memory.NewStorage(), genesisBlock)
+	assert.Nil(t, err)
 
-	assert.Nil(t, blockchain.AddBlock(randomBlockWithSignature(t, 1, privateKey)))
+	genesisBlockHash, err := genesisBlock.Hash()
+	assert.Nil(t, err)
+	header := block.NewHeader(1, genesisBlockHash, time.Now().UnixNano(), uint64(1), &headerEncoder)
+	newBlock := block.NewBlock(header, nil)
+	_, err = newBlock.Hash()
+	assert.Nil(t, err)
+	assert.Nil(t, newBlock.Sign(privateKey))
+	assert.Nil(t, blockchain.AddBlock(newBlock))
 
 	assert.Equal(t, uint64(1), blockchain.Height())
 }
 
-func TestBlockchain_AddBlock_FailWithInvalidHeight(t *testing.T) {
+func TestBlockchain_AddBlock_FailWithExistingBlock(t *testing.T) {
 	privateKey := randomPrivateKey(t)
-	blockchain := newBlockchain(t, 0, privateKey)
+	headerEncoder := binary.HeaderEncoder{}
+	genesisBlockHeader := block.NewHeader(1, internal.Hash{}, time.Now().UnixNano(), uint64(0), &headerEncoder)
+	genesisBlock := block.NewBlock(genesisBlockHeader, nil)
+	_, err := genesisBlock.Hash()
+	assert.Nil(t, err)
+	assert.Nil(t, genesisBlock.Sign(privateKey))
+	blockchain, err := block.NewBlockchain(memory.NewStorage(), genesisBlock)
+	assert.Nil(t, err)
 
-	assert.NotNil(t, blockchain.AddBlock(randomBlockWithSignature(t, 0, privateKey)))
+	genesisBlockHash, err := genesisBlock.Hash()
+	assert.Nil(t, err)
+	header := block.NewHeader(1, genesisBlockHash, time.Now().UnixNano(), uint64(0), &headerEncoder)
+	newBlock := block.NewBlock(header, nil)
+	_, err = newBlock.Hash()
+	assert.Nil(t, err)
+	assert.Nil(t, newBlock.Sign(privateKey))
+	assert.NotNil(t, blockchain.AddBlock(newBlock))
+
+	assert.Equal(t, uint64(0), blockchain.Height())
+}
+
+func TestBlockchain_AddBlock_FailWithInconsequentHeight(t *testing.T) {
+	privateKey := randomPrivateKey(t)
+	headerEncoder := binary.HeaderEncoder{}
+	genesisBlockHeader := block.NewHeader(1, internal.Hash{}, time.Now().UnixNano(), uint64(0), &headerEncoder)
+	genesisBlock := block.NewBlock(genesisBlockHeader, nil)
+	_, err := genesisBlock.Hash()
+	assert.Nil(t, err)
+	assert.Nil(t, genesisBlock.Sign(privateKey))
+	blockchain, err := block.NewBlockchain(memory.NewStorage(), genesisBlock)
+	assert.Nil(t, err)
+
+	genesisBlockHash, err := genesisBlock.Hash()
+	assert.Nil(t, err)
+	header := block.NewHeader(1, genesisBlockHash, time.Now().UnixNano(), uint64(2), &headerEncoder)
+	newBlock := block.NewBlock(header, nil)
+	_, err = newBlock.Hash()
+	assert.Nil(t, err)
+	assert.Nil(t, newBlock.Sign(privateKey))
+	assert.NotNil(t, blockchain.AddBlock(newBlock))
+
+	assert.Equal(t, uint64(0), blockchain.Height())
+}
+
+func TestBlockchain_AddBlock_FailWithInvalidPreviousBlockHash(t *testing.T) {
+	privateKey := randomPrivateKey(t)
+	headerEncoder := binary.HeaderEncoder{}
+	genesisBlockHeader := block.NewHeader(1, internal.Hash{}, time.Now().UnixNano(), uint64(0), &headerEncoder)
+	genesisBlock := block.NewBlock(genesisBlockHeader, nil)
+	_, err := genesisBlock.Hash()
+	assert.Nil(t, err)
+	assert.Nil(t, genesisBlock.Sign(privateKey))
+	blockchain, err := block.NewBlockchain(memory.NewStorage(), genesisBlock)
+	assert.Nil(t, err)
+
+	genesisBlockHash := randomHash(t)
+	assert.Nil(t, err)
+	header := block.NewHeader(1, genesisBlockHash, time.Now().UnixNano(), uint64(1), &headerEncoder)
+	newBlock := block.NewBlock(header, nil)
+	_, err = newBlock.Hash()
+	assert.Nil(t, err)
+	assert.Nil(t, newBlock.Sign(privateKey))
+	assert.NotNil(t, blockchain.AddBlock(newBlock))
 
 	assert.Equal(t, uint64(0), blockchain.Height())
 }
 
 func TestBlockchain_Height(t *testing.T) {
-	blockchain := newBlockchain(t, 0, randomPrivateKey(t))
+	privateKey := randomPrivateKey(t)
+	headerEncoder := binary.HeaderEncoder{}
+	genesisBlockHeader := block.NewHeader(1, internal.Hash{}, time.Now().UnixNano(), uint64(0), &headerEncoder)
+	genesisBlock := block.NewBlock(genesisBlockHeader, nil)
+	_, err := genesisBlock.Hash()
+	assert.Nil(t, err)
+	assert.Nil(t, genesisBlock.Sign(privateKey))
+	blockchain, err := block.NewBlockchain(memory.NewStorage(), genesisBlock)
+	assert.Nil(t, err)
 
 	assert.Equal(t, uint64(0), blockchain.Height())
 }
@@ -63,10 +140,23 @@ func TestBlockchain_HasBlock(t *testing.T) {
 	}
 
 	privateKey := randomPrivateKey(t)
-	blockchain := newBlockchain(t, 0, privateKey)
-	for i := range cases {
-		assert.Nil(t, blockchain.AddBlock(randomBlockWithSignature(t, uint64(i+1), privateKey)))
-	}
+	headerEncoder := binary.HeaderEncoder{}
+	genesisBlockHeader := block.NewHeader(1, internal.Hash{}, time.Now().UnixNano(), uint64(0), &headerEncoder)
+	genesisBlock := block.NewBlock(genesisBlockHeader, nil)
+	_, err := genesisBlock.Hash()
+	assert.Nil(t, err)
+	assert.Nil(t, genesisBlock.Sign(privateKey))
+	blockchain, err := block.NewBlockchain(memory.NewStorage(), genesisBlock)
+	assert.Nil(t, err)
+
+	genesisBlockHash, err := genesisBlock.Hash()
+	assert.Nil(t, err)
+	header := block.NewHeader(1, genesisBlockHash, time.Now().UnixNano(), uint64(1), &headerEncoder)
+	newBlock := block.NewBlock(header, nil)
+	_, err = newBlock.Hash()
+	assert.Nil(t, err)
+	assert.Nil(t, newBlock.Sign(privateKey))
+	assert.Nil(t, blockchain.AddBlock(newBlock))
 
 	for _, c := range cases {
 		t.Run(c.title, func(t *testing.T) {

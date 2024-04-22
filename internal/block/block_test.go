@@ -10,34 +10,33 @@ import (
 	"time"
 )
 
-func randomHash(t *testing.T) (internal.Hash, error) {
+func randomHash(t *testing.T) internal.Hash {
 	value := make([]byte, internal.HashLength)
 
 	_, err := rand.Read(value)
 	assert.Nil(t, err)
 
-	return internal.HashFromBytes(value)
+	hash, err := internal.HashFromBytes(value)
+	assert.Nil(t, err)
+
+	return hash
 }
 
 func randomHeader(t *testing.T, height uint64) *block.Header {
-	hash, err := randomHash(t)
-	assert.Nil(t, err)
+	hash := randomHash(t)
 
-	return block.NewHeader(1, hash, time.Now().UnixNano(), height)
+	return block.NewHeader(1, hash, time.Now().UnixNano(), height, &binary.HeaderEncoder{})
 }
 
 func randomBlock(t *testing.T, headerHeight uint64) *block.Block {
-	return block.NewBlock(randomHeader(t, headerHeight), nil)
-}
+	privateKey := randomPrivateKey(t)
+	transaction := block.Transaction{Data: []byte("Test")}
+	assert.Nil(t, transaction.Sign(privateKey))
 
-func randomBlockWithSignature(t *testing.T, headerHeight uint64, privateKey internal.PrivateKey) *block.Block {
-	b := block.NewBlock(randomHeader(t, headerHeight), nil)
-	_, err := b.Hash(&binary.BlockEncoder{})
-
-	assert.Nil(t, err)
-	assert.Nil(t, b.Sign(privateKey))
-
-	return b
+	return block.NewBlock(
+		randomHeader(t, headerHeight),
+		block.Transactions{transaction},
+	)
 }
 
 func randomPrivateKey(t *testing.T) internal.PrivateKey {
@@ -49,9 +48,8 @@ func randomPrivateKey(t *testing.T) internal.PrivateKey {
 
 func TestBlock_Hash(t *testing.T) {
 	b := randomBlock(t, uint64(10))
-	encoder := binary.BlockEncoder{}
 
-	hash, err := b.Hash(&encoder)
+	hash, err := b.Hash()
 
 	assert.Nil(t, err)
 	assert.False(t, hash.IsEmpty())
@@ -67,7 +65,7 @@ func TestBlock_Sign_FailWithNoHash(t *testing.T) {
 func TestBlock_SignVerify(t *testing.T) {
 	b := randomBlock(t, uint64(10))
 	privateKey := randomPrivateKey(t)
-	_, err := b.Hash(&binary.BlockEncoder{})
+	_, err := b.Hash()
 
 	assert.Nil(t, err)
 	assert.Nil(t, b.Sign(privateKey))

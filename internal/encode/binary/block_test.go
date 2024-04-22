@@ -20,13 +20,15 @@ func randomHash(t *testing.T) (internal.Hash, error) {
 	return internal.HashFromBytes(value)
 }
 
-func randomBlock(t *testing.T) *block.Block {
+func randomHeader(t *testing.T) *block.Header {
 	hash, err := randomHash(t)
 	assert.Nil(t, err)
 
-	header := block.NewHeader(1, hash, time.Now().UnixNano(), 10)
+	return block.NewHeader(1, hash, time.Now().UnixNano(), 10, &binary.HeaderEncoder{})
+}
 
-	return block.NewBlock(header, nil)
+func randomBlock(t *testing.T) *block.Block {
+	return block.NewBlock(randomHeader(t), nil)
 }
 
 func TestBlock_EncodeDecode(t *testing.T) {
@@ -38,7 +40,7 @@ func TestBlock_EncodeDecode(t *testing.T) {
 	assert.Nil(t, encoder.Encode(&buf, b))
 
 	decodedBlock := block.Block{
-		Head: &block.Header{},
+		Head: randomHeader(t),
 	}
 	decoder := binary.BlockDecoder{}
 

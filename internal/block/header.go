@@ -1,17 +1,47 @@
 package block
 
 import (
+	"bytes"
 	"github.com/DemianShtepa/blockchain-go/internal"
+	"io"
 )
 
-type Header struct {
-	Version       uint64
-	DataHash      internal.Hash
-	PreviousBlock internal.Hash
-	Timestamp     int64
-	Height        uint64
+type HeaderEncoder interface {
+	Encode(io.Writer, *Header) error
 }
 
-func NewHeader(version uint64, previousBlock internal.Hash, timestamp int64, height uint64) *Header {
-	return &Header{Version: version, PreviousBlock: previousBlock, Timestamp: timestamp, Height: height}
+type Header struct {
+	Version           uint64
+	DataHash          internal.Hash
+	PreviousBlockHash internal.Hash
+	Timestamp         int64
+	Height            uint64
+
+	headerEncoder HeaderEncoder
+}
+
+func NewHeader(
+	version uint64,
+	previousBlockHash internal.Hash,
+	timestamp int64,
+	height uint64,
+	headerEncoder HeaderEncoder,
+) *Header {
+	return &Header{
+		Version:           version,
+		PreviousBlockHash: previousBlockHash,
+		Timestamp:         timestamp,
+		Height:            height,
+		headerEncoder:     headerEncoder,
+	}
+}
+
+func (header *Header) Hash() (internal.Hash, error) {
+	var buf bytes.Buffer
+
+	if err := header.headerEncoder.Encode(&buf, header); err != nil {
+		return internal.Hash{}, err
+	}
+
+	return internal.HashFromBytes(buf.Bytes())
 }

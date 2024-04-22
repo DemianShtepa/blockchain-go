@@ -24,15 +24,15 @@ func TestHeader_EncodeDecode(t *testing.T) {
 	var buf bytes.Buffer
 
 	hash, _ := randomHash(t)
-	header := block.NewHeader(1, hash, time.Now().UnixNano(), 10)
 	encoder := gob.HeaderEncoder{}
+	header := block.NewHeader(1, hash, time.Now().UnixNano(), 10, &encoder)
 
 	assert.Nil(t, encoder.Encode(&buf, header))
 
-	var decodedHeader block.Header
+	decodedHeader := block.NewHeader(1, hash, time.Now().Add(time.Hour).UnixNano(), 1, &encoder)
 	decoder := gob.HeaderDecoder{}
 
-	assert.Nil(t, decoder.Decode(&buf, &decodedHeader))
+	assert.Nil(t, decoder.Decode(&buf, decodedHeader))
 
-	assert.Equal(t, *header, decodedHeader)
+	assert.Equal(t, *header, *decodedHeader)
 }

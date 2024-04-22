@@ -14,7 +14,7 @@ func (he *HeaderEncoder) Encode(writer io.Writer, header *block.Header) error {
 		return err
 	}
 
-	if err := binary.Write(writer, binary.LittleEndian, header.PreviousBlock); err != nil {
+	if err := binary.Write(writer, binary.LittleEndian, header.PreviousBlockHash); err != nil {
 		return err
 	}
 
@@ -33,7 +33,7 @@ func (hd *HeaderDecoder) Decode(reader io.Reader, header *block.Header) error {
 		return err
 	}
 
-	if err := binary.Read(reader, binary.LittleEndian, &header.PreviousBlock); err != nil {
+	if err := binary.Read(reader, binary.LittleEndian, &header.PreviousBlockHash); err != nil {
 		return err
 	}
 
