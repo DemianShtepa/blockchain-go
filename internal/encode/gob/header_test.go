@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func randomHash(t *testing.T) (internal.Hash, error) {
+func randomHash(t *testing.T) internal.Hash {
 	value := make([]byte, internal.HashLength)
 
 	_, err := rand.Read(value)
@@ -23,7 +23,7 @@ func randomHash(t *testing.T) (internal.Hash, error) {
 func TestHeader_EncodeDecode(t *testing.T) {
 	var buf bytes.Buffer
 
-	hash, _ := randomHash(t)
+	hash := randomHash(t)
 	encoder := gob.HeaderEncoder{}
 	header := block.NewHeader(1, hash, time.Now().UnixNano(), 10, &encoder)
 

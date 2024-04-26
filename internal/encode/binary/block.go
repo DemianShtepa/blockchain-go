@@ -19,8 +19,7 @@ func (be *BlockEncoder) Encode(w io.Writer, b *block.Block) error {
 }
 
 type BlockDecoder struct {
-	headerDecoder      HeaderDecoder
-	transactionDecoder TransactionDecoder
+	headerDecoder HeaderDecoder
 }
 
 func (bd *BlockDecoder) Decode(r io.Reader, b *block.Block) error {

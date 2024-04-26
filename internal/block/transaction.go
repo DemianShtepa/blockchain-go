@@ -9,8 +9,13 @@ type Transactions []Transaction
 type Transaction struct {
 	Data []byte
 
+	hash      internal.Hash
 	publicKey internal.PublicKey
 	signature *internal.Signature
+}
+
+func NewTransaction(data []byte) *Transaction {
+	return &Transaction{Data: data}
 }
 
 func (t *Transaction) PublicKey() internal.PublicKey {
@@ -39,4 +44,12 @@ func (t *Transaction) Verify() bool {
 	}
 
 	return t.signature.Verify(t.publicKey, t.Data)
+}
+
+func (t *Transaction) Hash() internal.Hash {
+	if t.hash.IsEmpty() {
+		t.hash = internal.HashFromBytes(t.Data)
+	}
+
+	return t.hash
 }

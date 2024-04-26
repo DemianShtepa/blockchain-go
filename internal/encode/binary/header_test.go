@@ -12,7 +12,7 @@ import (
 func TestHeader_EncodeDecode(t *testing.T) {
 	var buf bytes.Buffer
 
-	hash, _ := randomHash(t)
+	hash := randomHash(t)
 	encoder := binary.HeaderEncoder{}
 	header := block.NewHeader(1, hash, time.Now().UnixNano(), 10, &encoder)
 

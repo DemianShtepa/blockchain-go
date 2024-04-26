@@ -43,5 +43,5 @@ func (header *Header) Hash() (internal.Hash, error) {
 		return internal.Hash{}, err
 	}
 
-	return internal.HashFromBytes(buf.Bytes())
+	return internal.HashFromBytes(buf.Bytes()), nil
 }

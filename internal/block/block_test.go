@@ -16,8 +16,7 @@ func randomHash(t *testing.T) internal.Hash {
 	_, err := rand.Read(value)
 	assert.Nil(t, err)
 
-	hash, err := internal.HashFromBytes(value)
-	assert.Nil(t, err)
+	hash := internal.HashFromBytes(value)
 
 	return hash
 }
@@ -30,12 +29,12 @@ func randomHeader(t *testing.T, height uint64) *block.Header {
 
 func randomBlock(t *testing.T, headerHeight uint64) *block.Block {
 	privateKey := randomPrivateKey(t)
-	transaction := block.Transaction{Data: []byte("Test")}
+	transaction := block.NewTransaction([]byte("Test"))
 	assert.Nil(t, transaction.Sign(privateKey))
 
 	return block.NewBlock(
 		randomHeader(t, headerHeight),
-		block.Transactions{transaction},
+		block.Transactions{*transaction},
 	)
 }
 

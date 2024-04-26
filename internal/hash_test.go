@@ -18,10 +18,9 @@ func randomBytes(t *testing.T) []byte {
 }
 
 func TestHashFromBytes(t *testing.T) {
-	hash, err := internal.HashFromBytes(randomBytes(t))
+	hash := internal.HashFromBytes(randomBytes(t))
 
 	assert.False(t, hash.IsEmpty())
-	assert.Nil(t, err)
 }
 
 func TestHashFromReader(t *testing.T) {

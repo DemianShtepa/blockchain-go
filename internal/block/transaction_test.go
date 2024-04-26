@@ -9,9 +9,7 @@ import (
 
 func TestTransaction_Sign_Verify(t *testing.T) {
 	privateKey, _ := internal.NewPrivateKey()
-	transaction := block.Transaction{
-		Data: []byte("Test"),
-	}
+	transaction := block.NewTransaction([]byte("Test"))
 
 	assert.Nil(t, transaction.Sign(privateKey))
 	assert.True(t, transaction.Verify())
@@ -19,9 +17,7 @@ func TestTransaction_Sign_Verify(t *testing.T) {
 
 func TestTransaction_Verify_FailWithDifferentData(t *testing.T) {
 	privateKey, _ := internal.NewPrivateKey()
-	transaction := block.Transaction{
-		Data: []byte("Test"),
-	}
+	transaction := block.NewTransaction([]byte("Test"))
 
 	assert.Nil(t, transaction.Sign(privateKey))
 

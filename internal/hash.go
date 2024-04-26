@@ -41,10 +41,10 @@ func HashFromReader(reader io.Reader) (Hash, error) {
 		return Hash{}, err
 	}
 
-	return HashFromBytes(buf.Bytes())
+	return HashFromBytes(buf.Bytes()), nil
 }
 
-func HashFromBytes(b []byte) (Hash, error) {
+func HashFromBytes(b []byte) Hash {
 	shaHash := sha256.New()
 	shaHash.Write(b)
 	shaHashBytes := shaHash.Sum(nil)
@@ -54,5 +54,5 @@ func HashFromBytes(b []byte) (Hash, error) {
 		hash[i] = shaHashBytes[i]
 	}
 
-	return hash, nil
+	return hash
 }
